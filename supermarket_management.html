@@ -148,6 +148,11 @@
             color: white;
         }
 
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8 0%, #5bc0de 100%);
+            color: white;
+        }
+
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
@@ -248,11 +253,11 @@
 
         .modal-content {
             background-color: white;
-            margin: 15% auto;
+            margin: 10% auto;
             padding: 30px;
             border-radius: 15px;
             width: 90%;
-            max-width: 500px;
+            max-width: 600px;
         }
 
         .close {
@@ -285,6 +290,27 @@
             color: #721c24;
         }
 
+        .alert-warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
+        .profit-info {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
         @media (max-width: 768px) {
             .nav-tabs {
                 flex-direction: column;
@@ -294,7 +320,7 @@
                 margin: 5px 0;
             }
             
-            .stats-grid {
+            .stats-grid, .two-column {
                 grid-template-columns: 1fr;
             }
         }
@@ -304,7 +330,7 @@
     <div class="container">
         <div class="header">
             <h1>🛒 سیستم مدیریت سوپرمارکت</h1>
-            <p>سیستم جامع مدیریت فروشگاه و انبار</p>
+            <p>سیستم جامع مدیریت فروشگاه و انبار با محاسبه سود</p>
         </div>
 
         <div class="nav-tabs">
@@ -328,12 +354,20 @@
                     <div>فروش امروز (تومان)</div>
                 </div>
                 <div class="stat-card">
+                    <div class="stat-number" id="todayProfit">0</div>
+                    <div>سود امروز (تومان)</div>
+                </div>
+                <div class="stat-card">
                     <div class="stat-number" id="totalCustomers">0</div>
                     <div>تعداد مشتریان</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-number" id="lowStockItems">0</div>
                     <div>محصولات کم موجود</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProfit">0</div>
+                    <div>سود کل (تومان)</div>
                 </div>
             </div>
 
@@ -372,8 +406,12 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>قیمت (تومان):</label>
-                            <input type="number" id="productPrice" required>
+                            <label>قیمت خرید (تومان):</label>
+                            <input type="number" id="productCostPrice" required>
+                        </div>
+                        <div class="form-group">
+                            <label>قیمت فروش (تومان):</label>
+                            <input type="number" id="productSalePrice" required>
                         </div>
                         <div class="form-group">
                             <label>موجودی:</label>
@@ -383,6 +421,9 @@
                             <label>حداقل موجودی:</label>
                             <input type="number" id="productMinStock" value="5">
                         </div>
+                    </div>
+                    <div class="profit-info" id="profitPreview" style="display: none;">
+                        <strong>سود هر واحد: <span id="unitProfit">0</span> تومان</strong>
                     </div>
                     <button type="submit" class="btn btn-primary">افزودن محصول</button>
                 </form>
@@ -398,7 +439,9 @@
                                 <th>کد</th>
                                 <th>نام محصول</th>
                                 <th>دسته‌بندی</th>
-                                <th>قیمت</th>
+                                <th>قیمت خرید</th>
+                                <th>قیمت فروش</th>
+                                <th>سود واحد</th>
                                 <th>موجودی</th>
                                 <th>وضعیت</th>
                                 <th>عملیات</th>
@@ -410,9 +453,75 @@
             </div>
         </div>
 
+        <!-- Inventory Tab -->
+        <div id="inventory" class="tab-content">
+            <div class="card">
+                <h3>مدیریت موجودی</h3>
+                <form id="inventoryForm">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div class="form-group">
+                            <label>انتخاب محصول:</label>
+                            <select id="inventoryProduct" required>
+                                <option value="">انتخاب کنید</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>نوع عملیات:</label>
+                            <select id="inventoryAction" required>
+                                <option value="">انتخاب کنید</option>
+                                <option value="add">افزودن موجودی</option>
+                                <option value="remove">کاهش موجودی</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>مقدار:</label>
+                            <input type="number" id="inventoryAmount" required>
+                        </div>
+                        <div class="form-group">
+                            <label>توضیحات:</label>
+                            <input type="text" id="inventoryDescription" placeholder="دلیل تغییر موجودی">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">اعمال تغییرات</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>محصولات کم موجود</h3>
+                <div id="lowStockAlert"></div>
+                <table class="table" id="lowStockTable">
+                    <thead>
+                        <tr>
+                            <th>نام محصول</th>
+                            <th>موجودی فعلی</th>
+                            <th>حداقل موجودی</th>
+                            <th>وضعیت</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>تاریخچه تغییرات موجودی</h3>
+                <table class="table" id="inventoryHistoryTable">
+                    <thead>
+                        <tr>
+                            <th>تاریخ</th>
+                            <th>محصول</th>
+                            <th>عملیات</th>
+                            <th>مقدار</th>
+                            <th>توضیحات</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Sales Tab -->
         <div id="sales" class="tab-content">
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+            <div class="two-column">
                 <div class="card">
                     <h3>فروش محصولات</h3>
                     <form id="salesForm">
@@ -450,6 +559,9 @@
                         <p><strong>مجموع قیمت:</strong> <span id="subtotal">0</span> تومان</p>
                         <p><strong>تخفیف:</strong> <span id="totalDiscount">0</span> تومان</p>
                         <p><strong>مبلغ نهایی:</strong> <span id="finalTotal">0</span> تومان</p>
+                        <div class="profit-info">
+                            <strong>سود این فروش: <span id="saleProfit">0</span> تومان</strong>
+                        </div>
                     </div>
 
                     <div class="form-group" style="margin-top: 20px;">
@@ -469,7 +581,153 @@
             </div>
         </div>
 
-        <!-- Other tabs removed for brevity but following the same pattern -->
+        <!-- Customers Tab -->
+        <div id="customers" class="tab-content">
+            <div class="card">
+                <h3>افزودن مشتری جدید</h3>
+                <form id="customerForm">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div class="form-group">
+                            <label>نام و نام خانوادگی:</label>
+                            <input type="text" id="customerFullName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>شماره تماس:</label>
+                            <input type="text" id="customerPhoneNumber" required>
+                        </div>
+                        <div class="form-group">
+                            <label>ایمیل:</label>
+                            <input type="email" id="customerEmail">
+                        </div>
+                        <div class="form-group">
+                            <label>آدرس:</label>
+                            <textarea id="customerAddress" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">افزودن مشتری</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>لیست مشتریان</h3>
+                <input type="text" id="customerSearch" placeholder="جستجو در مشتریان..." style="width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                <table class="table" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>نام و نام خانوادگی</th>
+                            <th>شماره تماس</th>
+                            <th>ایمیل</th>
+                            <th>تعداد خرید</th>
+                            <th>مجموع خرید</th>
+                            <th>عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="todayRevenue">0</div>
+                    <div>درآمد امروز</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="monthlyRevenue">0</div>
+                    <div>درآمد ماهانه</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todaySalesCount">0</div>
+                    <div>فروش امروز</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="topProduct">-</div>
+                    <div>پرفروش‌ترین محصول</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="profitMargin">0</div>
+                    <div>درصد سود (%)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="monthlyProfit">0</div>
+                    <div>سود ماهانه</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>گزارش فروش روزانه</h3>
+                <table class="table" id="dailySalesTable">
+                    <thead>
+                        <tr>
+                            <th>زمان</th>
+                            <th>مشتری</th>
+                            <th>تعداد اقلام</th>
+                            <th>مبلغ کل</th>
+                            <th>تخفیف</th>
+                            <th>سود</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>محصولات پرفروش</h3>
+                <table class="table" id="topProductsTable">
+                    <thead>
+                        <tr>
+                            <th>محصول</th>
+                            <th>تعداد فروش</th>
+                            <th>درآمد</th>
+                            <th>سود</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editProductModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editProductModal')">&times;</span>
+            <h3>ویرایش محصول</h3>
+            <form id="editProductForm">
+                <input type="hidden" id="editProductId">
+                <div class="form-group">
+                    <label>نام محصول:</label>
+                    <input type="text" id="editProductName" required>
+                </div>
+                <div class="form-group">
+                    <label>قیمت خرید (تومان):</label>
+                    <input type="number" id="editProductCostPrice" required>
+                </div>
+                <div class="form-group">
+                    <label>قیمت فروش (تومان):</label>
+                    <input type="number" id="editProductSalePrice" required>
+                </div>
+                <div class="form-group">
+                    <label>دسته‌بندی:</label>
+                    <select id="editProductCategory" required>
+                        <option value="لبنیات">لبنیات</option>
+                        <option value="میوه و سبزی">میوه و سبزی</option>
+                        <option value="نان و غلات">نان و غلات</option>
+                        <option value="گوشت و مرغ">گوشت و مرغ</option>
+                        <option value="نوشیدنی">نوشیدنی</option>
+                        <option value="خشکبار">خشکبار</option>
+                        <option value="بهداشتی">بهداشتی</option>
+                        <option value="سایر">سایر</option>
+                    </select>
+                </div>
+                <div class="profit-info">
+                    <strong>سود جدید هر واحد: <span id="editUnitProfit">0</span> تومان</strong>
+                </div>
+                <button type="submit" class="btn btn-primary">ذخیره تغییرات</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -483,15 +741,121 @@
         // Initialize App
         document.addEventListener('DOMContentLoaded', function() {
             try {
-                updateDashboard();
-                displayProducts();
-                updateSalesDropdowns();
-                checkLowStock();
+                initializeApp();
             } catch (error) {
                 console.error('خطا در راه‌اندازی برنامه:', error);
                 showAlert('خطا در راه‌اندازی برنامه. لطفاً صفحه را مجدداً بارگذاری کنید.', 'danger');
             }
         });
+
+        function initializeApp() {
+            updateDashboard();
+            displayProducts();
+            displayCustomers();
+            updateSalesDropdowns();
+            updateInventoryDropdown();
+            updateReports();
+            checkLowStock();
+            displayInventoryHistory();
+            
+            // Add event listeners
+            setupEventListeners();
+            
+            // Add sample data if empty
+            if (products.length === 0) {
+                addSampleData();
+            }
+        }
+
+        function setupEventListeners() {
+            // Product form listeners
+            const costPriceInput = document.getElementById('productCostPrice');
+            const salePriceInput = document.getElementById('productSalePrice');
+            const editCostPriceInput = document.getElementById('editProductCostPrice');
+            const editSalePriceInput = document.getElementById('editProductSalePrice');
+
+            if (costPriceInput && salePriceInput) {
+                costPriceInput.addEventListener('input', updateProfitPreview);
+                salePriceInput.addEventListener('input', updateProfitPreview);
+            }
+
+            if (editCostPriceInput && editSalePriceInput) {
+                editCostPriceInput.addEventListener('input', updateEditProfitPreview);
+                editSalePriceInput.addEventListener('input', updateEditProfitPreview);
+            }
+
+            // Search listeners
+            const productSearchInput = document.getElementById('productSearch');
+            const customerSearchInput = document.getElementById('customerSearch');
+
+            if (productSearchInput) {
+                productSearchInput.addEventListener('input', displayProducts);
+            }
+
+            if (customerSearchInput) {
+                customerSearchInput.addEventListener('input', displayCustomers);
+            }
+
+            // Form listeners
+            const productForm = document.getElementById('productForm');
+            const customerForm = document.getElementById('customerForm');
+            const salesForm = document.getElementById('salesForm');
+            const inventoryForm = document.getElementById('inventoryForm');
+            const editProductForm = document.getElementById('editProductForm');
+
+            if (productForm) {
+                productForm.addEventListener('submit', handleProductSubmit);
+            }
+
+            if (customerForm) {
+                customerForm.addEventListener('submit', handleCustomerSubmit);
+            }
+
+            if (salesForm) {
+                salesForm.addEventListener('submit', handleSalesSubmit);
+            }
+
+            if (inventoryForm) {
+                inventoryForm.addEventListener('submit', handleInventorySubmit);
+            }
+
+            if (editProductForm) {
+                editProductForm.addEventListener('submit', handleEditProductSubmit);
+            }
+        }
+
+        function updateProfitPreview() {
+            const costPrice = parseFloat(document.getElementById('productCostPrice').value) || 0;
+            const salePrice = parseFloat(document.getElementById('productSalePrice').value) || 0;
+            const profit = salePrice - costPrice;
+            
+            const profitPreview = document.getElementById('profitPreview');
+            const unitProfit = document.getElementById('unitProfit');
+            
+            if (costPrice > 0 && salePrice > 0) {
+                profitPreview.style.display = 'block';
+                unitProfit.textContent = profit.toLocaleString();
+                
+                if (profit < 0) {
+                    profitPreview.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #feca57 100%)';
+                } else {
+                    profitPreview.style.background = 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)';
+                }
+            } else {
+                profitPreview.style.display = 'none';
+            }
+        }
+
+        function updateEditProfitPreview() {
+            const costPrice = parseFloat(document.getElementById('editProductCostPrice').value) || 0;
+            const salePrice = parseFloat(document.getElementById('editProductSalePrice').value) || 0;
+            const profit = salePrice - costPrice;
+            
+            const editUnitProfit = document.getElementById('editUnitProfit');
+            if (editUnitProfit) {
+                editUnitProfit.textContent = profit.toLocaleString();
+            }
+        }
 
         // Tab Management
         function showTab(tabName) {
@@ -512,14 +876,25 @@
                 }
                 
                 // Update data when switching tabs
-                if (tabName === 'dashboard') updateDashboard();
+                switch(tabName) {
+                    case 'dashboard':
+                        updateDashboard();
+                        break;
+                    case 'inventory':
+                        checkLowStock();
+                        displayInventoryHistory();
+                        break;
+                    case 'reports':
+                        updateReports();
+                        break;
+                }
             } catch (error) {
                 console.error('خطا در تغییر تب:', error);
             }
         }
 
         // Product Management
-        document.getElementById('productForm').addEventListener('submit', function(e) {
+        function handleProductSubmit(e) {
             e.preventDefault();
             
             try {
@@ -528,16 +903,22 @@
                     code: document.getElementById('productCode').value,
                     name: document.getElementById('productName').value,
                     category: document.getElementById('productCategory').value,
-                    price: parseFloat(document.getElementById('productPrice').value),
+                    costPrice: parseFloat(document.getElementById('productCostPrice').value),
+                    salePrice: parseFloat(document.getElementById('productSalePrice').value),
                     stock: parseInt(document.getElementById('productStock').value),
                     minStock: parseInt(document.getElementById('productMinStock').value)
                 };
                 
                 // Validation
                 if (!product.name || !product.code || !product.category || 
-                    isNaN(product.price) || isNaN(product.stock) || isNaN(product.minStock)) {
+                    isNaN(product.costPrice) || isNaN(product.salePrice) || 
+                    isNaN(product.stock) || isNaN(product.minStock)) {
                     showAlert('لطفاً تمام فیلدها را به درستی پر کنید.', 'danger');
                     return;
+                }
+
+                if (product.salePrice <= product.costPrice) {
+                    showAlert('قیمت فروش باید بیشتر از قیمت خرید باشد.', 'warning');
                 }
                 
                 // Check if product code already exists
@@ -551,15 +932,17 @@
                 
                 displayProducts();
                 updateSalesDropdowns();
+                updateInventoryDropdown();
                 updateDashboard();
                 
                 showAlert('محصول با موفقیت اضافه شد!', 'success');
-                this.reset();
+                e.target.reset();
+                document.getElementById('profitPreview').style.display = 'none';
             } catch (error) {
                 console.error('خطا در افزودن محصول:', error);
                 showAlert('خطا در افزودن محصول. لطفاً مجدداً تلاش کنید.', 'danger');
             }
-        });
+        }
 
         function displayProducts() {
             try {
@@ -580,12 +963,16 @@
                         '<span style="color: red;">کم موجود</span>' : 
                         '<span style="color: green;">موجود</span>';
                     
+                    const profit = product.salePrice - product.costPrice;
+                    
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td>${product.code}</td>
                         <td>${product.name}</td>
                         <td>${product.category}</td>
-                        <td>${product.price.toLocaleString()} تومان</td>
+                        <td>${product.costPrice.toLocaleString()} تومان</td>
+                        <td>${product.salePrice.toLocaleString()} تومان</td>
+                        <td style="color: ${profit >= 0 ? 'green' : 'red'};">${profit.toLocaleString()} تومان</td>
                         <td>${product.stock}</td>
                         <td>${status}</td>
                         <td>
@@ -600,10 +987,46 @@
             }
         }
 
-        // Product search
-        const productSearchInput = document.getElementById('productSearch');
-        if (productSearchInput) {
-            productSearchInput.addEventListener('input', displayProducts);
+        function editProduct(id) {
+            try {
+                const product = products.find(p => p.id === id);
+                if (product) {
+                    document.getElementById('editProductId').value = product.id;
+                    document.getElementById('editProductName').value = product.name;
+                    document.getElementById('editProductCostPrice').value = product.costPrice;
+                    document.getElementById('editProductSalePrice').value = product.salePrice;
+                    document.getElementById('editProductCategory').value = product.category;
+                    updateEditProfitPreview();
+                    document.getElementById('editProductModal').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('خطا در ویرایش محصول:', error);
+            }
+        }
+
+        function handleEditProductSubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const id = document.getElementById('editProductId').value;
+                const productIndex = products.findIndex(p => p.id === id);
+                
+                if (productIndex !== -1) {
+                    products[productIndex].name = document.getElementById('editProductName').value;
+                    products[productIndex].costPrice = parseFloat(document.getElementById('editProductCostPrice').value);
+                    products[productIndex].salePrice = parseFloat(document.getElementById('editProductSalePrice').value);
+                    products[productIndex].category = document.getElementById('editProductCategory').value;
+                    
+                    localStorage.setItem('products', JSON.stringify(products));
+                    displayProducts();
+                    updateSalesDropdowns();
+                    closeModal('editProductModal');
+                    showAlert('محصول با موفقیت ویرایش شد!', 'success');
+                }
+            } catch (error) {
+                console.error('خطا در ویرایش محصول:', error);
+                showAlert('خطا در ویرایش محصول.', 'danger');
+            }
         }
 
         function deleteProduct(id) {
@@ -613,12 +1036,141 @@
                     localStorage.setItem('products', JSON.stringify(products));
                     displayProducts();
                     updateSalesDropdowns();
+                    updateInventoryDropdown();
                     updateDashboard();
                     showAlert('محصول حذف شد!', 'success');
                 }
             } catch (error) {
                 console.error('خطا در حذف محصول:', error);
                 showAlert('خطا در حذف محصول.', 'danger');
+            }
+        }
+
+        // Inventory Management
+        function handleInventorySubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const productId = document.getElementById('inventoryProduct').value;
+                const action = document.getElementById('inventoryAction').value;
+                const amount = parseInt(document.getElementById('inventoryAmount').value);
+                const description = document.getElementById('inventoryDescription').value;
+                
+                const product = products.find(p => p.id === productId);
+                if (!product) return;
+                
+                if (action === 'add') {
+                    product.stock += amount;
+                } else if (action === 'remove') {
+                    if (product.stock < amount) {
+                        showAlert('موجودی کافی نیست!', 'danger');
+                        return;
+                    }
+                    product.stock -= amount;
+                }
+                
+                // Record inventory transaction
+                const transaction = {
+                    id: Date.now().toString(),
+                    productId: productId,
+                    productName: product.name,
+                    action: action,
+                    amount: amount,
+                    description: description,
+                    date: new Date().toLocaleDateString('fa-IR'),
+                    time: new Date().toLocaleTimeString('fa-IR')
+                };
+                
+                inventory.push(transaction);
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                localStorage.setItem('products', JSON.stringify(products));
+                
+                displayProducts();
+                checkLowStock();
+                displayInventoryHistory();
+                updateDashboard();
+                
+                showAlert('تغییرات موجودی اعمال شد!', 'success');
+                e.target.reset();
+            } catch (error) {
+                console.error('خطا در مدیریت موجودی:', error);
+                showAlert('خطا در مدیریت موجودی.', 'danger');
+            }
+        }
+
+        function updateInventoryDropdown() {
+            try {
+                const select = document.getElementById('inventoryProduct');
+                if (!select) return;
+                
+                select.innerHTML = '<option value="">انتخاب کنید</option>';
+                
+                products.forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.name} (${product.code}) - موجودی: ${product.stock}`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی لیست موجودی:', error);
+            }
+        }
+
+        function checkLowStock() {
+            try {
+                const lowStockProducts = products.filter(p => p.stock <= p.minStock);
+                const tbody = document.querySelector('#lowStockTable tbody');
+                const alertDiv = document.getElementById('lowStockAlert');
+                
+                if (!tbody || !alertDiv) return;
+                
+                tbody.innerHTML = '';
+                
+                if (lowStockProducts.length > 0) {
+                    alertDiv.innerHTML = `<div class="alert alert-danger">⚠️ ${lowStockProducts.length} محصول کم موجود است!</div>`;
+                    
+                    lowStockProducts.forEach(product => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product.name}</td>
+                            <td>${product.stock}</td>
+                            <td>${product.minStock}</td>
+                            <td><span style="color: red;">کم موجود</span></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    alertDiv.innerHTML = '<div class="alert alert-success">✅ تمام محصولات موجودی کافی دارند.</div>';
+                }
+            } catch (error) {
+                console.error('خطا در بررسی موجودی:', error);
+            }
+        }
+
+        function displayInventoryHistory() {
+            try {
+                const tbody = document.querySelector('#inventoryHistoryTable tbody');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                
+                const recentTransactions = inventory.slice(-20).reverse();
+                
+                recentTransactions.forEach(transaction => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${transaction.date} ${transaction.time}</td>
+                        <td>${transaction.productName}</td>
+                        <td>${transaction.action === 'add' ? 'افزودن' : 'کاهش'}</td>
+                        <td style="color: ${transaction.action === 'add' ? 'green' : 'red'};">
+                            ${transaction.action === 'add' ? '+' : '-'}${transaction.amount}
+                        </td>
+                        <td>${transaction.description || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('خطا در نمایش تاریخچه موجودی:', error);
             }
         }
 
@@ -633,7 +1185,7 @@
                 products.filter(p => p.stock > 0).forEach(product => {
                     const option = document.createElement('option');
                     option.value = product.id;
-                    option.textContent = `${product.name} - ${product.price.toLocaleString()} تومان (موجودی: ${product.stock})`;
+                    option.textContent = `${product.name} - ${product.salePrice.toLocaleString()} تومان (موجودی: ${product.stock})`;
                     select.appendChild(option);
                 });
             } catch (error) {
@@ -641,45 +1193,51 @@
             }
         }
 
-        const salesForm = document.getElementById('salesForm');
-        if (salesForm) {
-            salesForm.addEventListener('submit', function(e) {
-                e.preventDefault();
+        function handleSalesSubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const productId = document.getElementById('saleProduct').value;
+                const quantity = parseInt(document.getElementById('saleQuantity').value);
+                const discount = parseFloat(document.getElementById('saleDiscount').value) || 0;
                 
-                try {
-                    const productId = document.getElementById('saleProduct').value;
-                    const quantity = parseInt(document.getElementById('saleQuantity').value);
-                    const discount = parseFloat(document.getElementById('saleDiscount').value) || 0;
-                    
-                    const product = products.find(p => p.id === productId);
-                    if (!product) {
-                        showAlert('محصول انتخاب شده معتبر نیست.', 'danger');
-                        return;
-                    }
-                    
-                    if (product.stock < quantity) {
-                        showAlert('موجودی کافی نیست!', 'danger');
-                        return;
-                    }
-                    
-                    const cartItem = {
-                        productId: productId,
-                        productName: product.name,
-                        price: product.price,
-                        quantity: quantity,
-                        discount: discount,
-                        total: (product.price * quantity) * (1 - discount / 100)
-                    };
-                    
-                    currentCart.push(cartItem);
-                    updateCartDisplay();
-                    this.reset();
-                    showAlert('محصول به سبد خرید اضافه شد!', 'success');
-                } catch (error) {
-                    console.error('خطا در افزودن به سبد خرید:', error);
-                    showAlert('خطا در افزودن به سبد خرید.', 'danger');
+                const product = products.find(p => p.id === productId);
+                if (!product) {
+                    showAlert('محصول انتخاب شده معتبر نیست.', 'danger');
+                    return;
                 }
-            });
+                
+                if (product.stock < quantity) {
+                    showAlert('موجودی کافی نیست!', 'danger');
+                    return;
+                }
+                
+                const subtotal = product.salePrice * quantity;
+                const discountAmount = subtotal * (discount / 100);
+                const total = subtotal - discountAmount;
+                const profit = (product.salePrice - product.costPrice) * quantity - discountAmount;
+                
+                const cartItem = {
+                    productId: productId,
+                    productName: product.name,
+                    costPrice: product.costPrice,
+                    salePrice: product.salePrice,
+                    quantity: quantity,
+                    discount: discount,
+                    subtotal: subtotal,
+                    discountAmount: discountAmount,
+                    total: total,
+                    profit: profit
+                };
+                
+                currentCart.push(cartItem);
+                updateCartDisplay();
+                e.target.reset();
+                showAlert('محصول به سبد خرید اضافه شد!', 'success');
+            } catch (error) {
+                console.error('خطا در افزودن به سبد خرید:', error);
+                showAlert('خطا در افزودن به سبد خرید.', 'danger');
+            }
         }
 
         function updateCartDisplay() {
@@ -692,19 +1250,22 @@
                 let totalItems = 0;
                 let subtotal = 0;
                 let totalDiscount = 0;
+                let totalProfit = 0;
                 
                 currentCart.forEach((item, index) => {
                     totalItems += item.quantity;
-                    subtotal += item.price * item.quantity;
-                    totalDiscount += (item.price * item.quantity) * (item.discount / 100);
+                    subtotal += item.subtotal;
+                    totalDiscount += item.discountAmount;
+                    totalProfit += item.profit;
                     
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'checkout-item';
                     itemDiv.innerHTML = `
                         <div>
                             <strong>${item.productName}</strong><br>
-                            ${item.quantity} × ${item.price.toLocaleString()} تومان
+                            ${item.quantity} × ${item.salePrice.toLocaleString()} تومان
                             ${item.discount > 0 ? ` (${item.discount}% تخفیف)` : ''}
+                            <br><small style="color: green;">سود: ${item.profit.toLocaleString()} تومان</small>
                         </div>
                         <div>
                             <strong>${item.total.toLocaleString()} تومان</strong>
@@ -719,13 +1280,15 @@
                     totalItems: document.getElementById('totalItems'),
                     subtotal: document.getElementById('subtotal'),
                     totalDiscount: document.getElementById('totalDiscount'),
-                    finalTotal: document.getElementById('finalTotal')
+                    finalTotal: document.getElementById('finalTotal'),
+                    saleProfit: document.getElementById('saleProfit')
                 };
                 
                 if (elements.totalItems) elements.totalItems.textContent = totalItems;
                 if (elements.subtotal) elements.subtotal.textContent = subtotal.toLocaleString();
                 if (elements.totalDiscount) elements.totalDiscount.textContent = totalDiscount.toLocaleString();
                 if (elements.finalTotal) elements.finalTotal.textContent = (subtotal - totalDiscount).toLocaleString();
+                if (elements.saleProfit) elements.saleProfit.textContent = totalProfit.toLocaleString();
             } catch (error) {
                 console.error('خطا در به‌روزرسانی سبد خرید:', error);
             }
@@ -778,16 +1341,21 @@
                     customerPhone: customerPhone,
                     items: [...currentCart],
                     totalItems: currentCart.reduce((sum, item) => sum + item.quantity, 0),
-                    subtotal: currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
-                    totalDiscount: currentCart.reduce((sum, item) => sum + (item.price * item.quantity * item.discount / 100), 0),
-                    finalTotal: currentCart.reduce((sum, item) => sum + item.total, 0)
+                    subtotal: currentCart.reduce((sum, item) => sum + item.subtotal, 0),
+                    totalDiscount: currentCart.reduce((sum, item) => sum + item.discountAmount, 0),
+                    finalTotal: currentCart.reduce((sum, item) => sum + item.total, 0),
+                    totalProfit: currentCart.reduce((sum, item) => sum + item.profit, 0)
                 };
                 
                 sales.push(sale);
                 
+                // Update customer record
+                updateCustomerRecord(customerName, customerPhone, sale.finalTotal);
+                
                 // Save to localStorage
                 localStorage.setItem('products', JSON.stringify(products));
                 localStorage.setItem('sales', JSON.stringify(sales));
+                localStorage.setItem('customers', JSON.stringify(customers));
                 
                 // Show receipt
                 showReceipt(sale);
@@ -810,6 +1378,31 @@
             }
         }
 
+        function updateCustomerRecord(customerName, customerPhone, amount) {
+            try {
+                if (customerPhone) {
+                    let customer = customers.find(c => c.phone === customerPhone);
+                    if (customer) {
+                        customer.totalPurchases = (customer.totalPurchases || 0) + 1;
+                        customer.totalAmount = (customer.totalAmount || 0) + amount;
+                    } else if (customerName !== 'مشتری') {
+                        customers.push({
+                            id: Date.now().toString(),
+                            name: customerName,
+                            phone: customerPhone,
+                            email: '',
+                            address: '',
+                            totalPurchases: 1,
+                            totalAmount: amount,
+                            registrationDate: new Date().toLocaleDateString('fa-IR')
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی اطلاعات مشتری:', error);
+            }
+        }
+
         function showReceipt(sale) {
             try {
                 const receiptDiv = document.getElementById('receipt');
@@ -823,9 +1416,10 @@
                         <tr>
                             <td>${item.productName}</td>
                             <td>${item.quantity}</td>
-                            <td>${item.price.toLocaleString()}</td>
+                            <td>${item.salePrice.toLocaleString()}</td>
                             <td>${item.discount}%</td>
                             <td>${item.total.toLocaleString()}</td>
+                            <td style="color: green;">${item.profit.toLocaleString()}</td>
                         </tr>
                     `;
                 });
@@ -850,6 +1444,7 @@
                                 <th style="text-align: center; padding: 8px;">قیمت واحد</th>
                                 <th style="text-align: center; padding: 8px;">تخفیف</th>
                                 <th style="text-align: center; padding: 8px;">مبلغ</th>
+                                <th style="text-align: center; padding: 8px;">سود</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -873,6 +1468,10 @@
                         <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; border-top: 1px solid #333; padding-top: 10px;">
                             <span>مبلغ نهایی:</span>
                             <span>${sale.finalTotal.toLocaleString()} تومان</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: green; font-weight: bold;">
+                            <span>سود این فروش:</span>
+                            <span>${sale.totalProfit.toLocaleString()} تومان</span>
                         </div>
                     </div>
                     
@@ -907,23 +1506,115 @@
             }
         }
 
+        // Customer Management
+        function handleCustomerSubmit(e) {
+            e.preventDefault();
+            
+            try {
+                const customer = {
+                    id: Date.now().toString(),
+                    name: document.getElementById('customerFullName').value,
+                    phone: document.getElementById('customerPhoneNumber').value,
+                    email: document.getElementById('customerEmail').value,
+                    address: document.getElementById('customerAddress').value,
+                    registrationDate: new Date().toLocaleDateString('fa-IR'),
+                    totalPurchases: 0,
+                    totalAmount: 0
+                };
+                
+                // Check if phone number already exists
+                if (customers.find(c => c.phone === customer.phone)) {
+                    showAlert('شماره تماس تکراری است!', 'danger');
+                    return;
+                }
+                
+                customers.push(customer);
+                localStorage.setItem('customers', JSON.stringify(customers));
+                
+                displayCustomers();
+                updateDashboard();
+                
+                showAlert('مشتری با موفقیت اضافه شد!', 'success');
+                e.target.reset();
+            } catch (error) {
+                console.error('خطا در افزودن مشتری:', error);
+                showAlert('خطا در افزودن مشتری.', 'danger');
+            }
+        }
+
+        function displayCustomers() {
+            try {
+                const tbody = document.querySelector('#customersTable tbody');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                
+                const searchTerm = document.getElementById('customerSearch')?.value.toLowerCase() || '';
+                const filteredCustomers = customers.filter(customer => 
+                    customer.name.toLowerCase().includes(searchTerm) ||
+                    customer.phone.toLowerCase().includes(searchTerm) ||
+                    (customer.email && customer.email.toLowerCase().includes(searchTerm))
+                );
+                
+                filteredCustomers.forEach(customer => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${customer.name}</td>
+                        <td>${customer.phone}</td>
+                        <td>${customer.email || '-'}</td>
+                        <td>${customer.totalPurchases || 0}</td>
+                        <td>${(customer.totalAmount || 0).toLocaleString()} تومان</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteCustomer('${customer.id}')">حذف</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('خطا در نمایش مشتریان:', error);
+            }
+        }
+
+        function deleteCustomer(id) {
+            try {
+                if (confirm('آیا از حذف این مشتری اطمینان دارید؟')) {
+                    customers = customers.filter(c => c.id !== id);
+                    localStorage.setItem('customers', JSON.stringify(customers));
+                    displayCustomers();
+                    updateDashboard();
+                    showAlert('مشتری حذف شد!', 'success');
+                }
+            } catch (error) {
+                console.error('خطا در حذف مشتری:', error);
+                showAlert('خطا در حذف مشتری.', 'danger');
+            }
+        }
+
         // Dashboard Updates
         function updateDashboard() {
             try {
                 const elements = {
                     totalProducts: document.getElementById('totalProducts'),
                     totalSales: document.getElementById('totalSales'),
+                    todayProfit: document.getElementById('todayProfit'),
+                    totalCustomers: document.getElementById('totalCustomers'),
                     lowStockItems: document.getElementById('lowStockItems'),
+                    totalProfit: document.getElementById('totalProfit'),
                     recentActivity: document.getElementById('recentActivity')
                 };
                 
                 if (elements.totalProducts) elements.totalProducts.textContent = products.length;
+                if (elements.totalCustomers) elements.totalCustomers.textContent = customers.length;
                 
                 const today = new Date().toLocaleDateString('fa-IR');
                 const todaySales = sales.filter(s => s.date === today);
                 const todayRevenue = todaySales.reduce((sum, s) => sum + s.finalTotal, 0);
+                const todayProfitAmount = todaySales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
+                const totalProfitAmount = sales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
                 
                 if (elements.totalSales) elements.totalSales.textContent = todayRevenue.toLocaleString();
+                if (elements.todayProfit) elements.todayProfit.textContent = todayProfitAmount.toLocaleString();
+                if (elements.totalProfit) elements.totalProfit.textContent = totalProfitAmount.toLocaleString();
                 if (elements.lowStockItems) elements.lowStockItems.textContent = products.filter(p => p.stock <= p.minStock).length;
                 
                 // Recent activity
@@ -933,7 +1624,9 @@
                     if (recentSales.length > 0) {
                         elements.recentActivity.innerHTML = recentSales.map(sale => 
                             `<div style="padding: 10px; border-bottom: 1px solid #eee;">
-                                <strong>فروش ${sale.finalTotal.toLocaleString()} تومان</strong> - ${sale.customerName} - ${sale.date} ${sale.time}
+                                <strong>فروش ${sale.finalTotal.toLocaleString()} تومان</strong> - 
+                                سود: <span style="color: green;">${(sale.totalProfit || 0).toLocaleString()} تومان</span> - 
+                                ${sale.customerName} - ${sale.date} ${sale.time}
                             </div>`
                         ).join('');
                     } else {
@@ -945,8 +1638,121 @@
             }
         }
 
-        function checkLowStock() {
-            // This function would be implemented similar to others with proper error handling
+        // Reports
+        function updateReports() {
+            try {
+                const today = new Date().toLocaleDateString('fa-IR');
+                const todaySales = sales.filter(s => s.date === today);
+                
+                // Today's revenue and profit
+                const todayRevenue = todaySales.reduce((sum, s) => sum + s.finalTotal, 0);
+                const todayProfitAmount = todaySales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
+                
+                // Monthly revenue and profit
+                const monthlyRevenue = sales.reduce((sum, s) => sum + s.finalTotal, 0);
+                const monthlyProfitAmount = sales.reduce((sum, s) => sum + (s.totalProfit || 0), 0);
+                
+                // Profit margin
+                const profitMarginPercent = monthlyRevenue > 0 ? ((monthlyProfitAmount / monthlyRevenue) * 100).toFixed(1) : 0;
+                
+                // Update stats
+                const statsElements = {
+                    todayRevenue: document.getElementById('todayRevenue'),
+                    monthlyRevenue: document.getElementById('monthlyRevenue'),
+                    todaySalesCount: document.getElementById('todaySalesCount'),
+                    topProduct: document.getElementById('topProduct'),
+                    profitMargin: document.getElementById('profitMargin'),
+                    monthlyProfit: document.getElementById('monthlyProfit')
+                };
+                
+                if (statsElements.todayRevenue) statsElements.todayRevenue.textContent = todayRevenue.toLocaleString();
+                if (statsElements.monthlyRevenue) statsElements.monthlyRevenue.textContent = monthlyRevenue.toLocaleString();
+                if (statsElements.todaySalesCount) statsElements.todaySalesCount.textContent = todaySales.length;
+                if (statsElements.profitMargin) statsElements.profitMargin.textContent = profitMarginPercent;
+                if (statsElements.monthlyProfit) statsElements.monthlyProfit.textContent = monthlyProfitAmount.toLocaleString();
+                
+                // Top product
+                const productSales = {};
+                sales.forEach(sale => {
+                    sale.items.forEach(item => {
+                        productSales[item.productName] = (productSales[item.productName] || 0) + item.quantity;
+                    });
+                });
+                
+                const topProduct = Object.keys(productSales).length > 0 ? 
+                    Object.keys(productSales).reduce((a, b) => productSales[a] > productSales[b] ? a : b) : '-';
+                if (statsElements.topProduct) statsElements.topProduct.textContent = topProduct;
+                
+                // Daily sales table
+                updateDailySalesTable(todaySales);
+                
+                // Top products table
+                updateTopProductsTable();
+                
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی گزارشات:', error);
+            }
+        }
+
+        function updateDailySalesTable(todaySales) {
+            try {
+                const tbody = document.querySelector('#dailySalesTable tbody');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                
+                todaySales.reverse().forEach(sale => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${sale.time}</td>
+                        <td>${sale.customerName}</td>
+                        <td>${sale.totalItems}</td>
+                        <td>${sale.finalTotal.toLocaleString()} تومان</td>
+                        <td>${sale.totalDiscount.toLocaleString()} تومان</td>
+                        <td style="color: green;">${(sale.totalProfit || 0).toLocaleString()} تومان</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی جدول فروش روزانه:', error);
+            }
+        }
+
+        function updateTopProductsTable() {
+            try {
+                const tbody = document.querySelector('#topProductsTable tbody');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                
+                const productStats = {};
+                sales.forEach(sale => {
+                    sale.items.forEach(item => {
+                        if (!productStats[item.productName]) {
+                            productStats[item.productName] = { quantity: 0, revenue: 0, profit: 0 };
+                        }
+                        productStats[item.productName].quantity += item.quantity;
+                        productStats[item.productName].revenue += item.total;
+                        productStats[item.productName].profit += item.profit || 0;
+                    });
+                });
+                
+                Object.entries(productStats)
+                    .sort((a, b) => b[1].quantity - a[1].quantity)
+                    .slice(0, 10)
+                    .forEach(([product, data]) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${product}</td>
+                            <td>${data.quantity}</td>
+                            <td>${data.revenue.toLocaleString()} تومان</td>
+                            <td style="color: green;">${data.profit.toLocaleString()} تومان</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی جدول محصولات پرفروش:', error);
+            }
         }
 
         // Utility Functions
@@ -973,21 +1779,45 @@
             }
         }
 
-        // Add some sample data if empty
-        if (products.length === 0) {
+        function closeModal(modalId) {
+            try {
+                const modal = document.getElementById(modalId);
+                if (modal) modal.style.display = 'none';
+            } catch (error) {
+                console.error('خطا در بستن modal:', error);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            try {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => {
+                    if (event.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            } catch (error) {
+                console.error('خطا در بستن modal:', error);
+            }
+        }
+
+        // Add sample data
+        function addSampleData() {
             try {
                 const sampleProducts = [
-                    { id: '1', code: 'P001', name: 'شیر کاله', category: 'لبنیات', price: 25000, stock: 50, minStock: 10 },
-                    { id: '2', code: 'P002', name: 'نان بربری', category: 'نان و غلات', price: 5000, stock: 30, minStock: 5 },
-                    { id: '3', code: 'P003', name: 'سیب قرمز', category: 'میوه و سبزی', price: 45000, stock: 25, minStock: 5 },
-                    { id: '4', code: 'P004', name: 'مرغ تازه', category: 'گوشت و مرغ', price: 180000, stock: 15, minStock: 3 },
-                    { id: '5', code: 'P005', name: 'آب معدنی', category: 'نوشیدنی', price: 8000, stock: 100, minStock: 20 }
+                    { id: '1', code: 'P001', name: 'شیر کاله', category: 'لبنیات', costPrice: 20000, salePrice: 25000, stock: 50, minStock: 10 },
+                    { id: '2', code: 'P002', name: 'نان بربری', category: 'نان و غلات', costPrice: 3000, salePrice: 5000, stock: 30, minStock: 5 },
+                    { id: '3', code: 'P003', name: 'سیب قرمز', category: 'میوه و سبزی', costPrice: 35000, salePrice: 45000, stock: 25, minStock: 5 },
+                    { id: '4', code: 'P004', name: 'مرغ تازه', category: 'گوشت و مرغ', costPrice: 150000, salePrice: 180000, stock: 15, minStock: 3 },
+                    { id: '5', code: 'P005', name: 'آب معدنی', category: 'نوشیدنی', costPrice: 5000, salePrice: 8000, stock: 100, minStock: 20 }
                 ];
                 
                 products = sampleProducts;
                 localStorage.setItem('products', JSON.stringify(products));
                 displayProducts();
                 updateSalesDropdowns();
+                updateInventoryDropdown();
                 updateDashboard();
             } catch (error) {
                 console.error('خطا در افزودن داده‌های نمونه:', error);
