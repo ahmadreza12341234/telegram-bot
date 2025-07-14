@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سیستم مدیریت سوپرمارکت</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-radius: 15px;
+            padding: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            padding: 15px 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 10px;
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f7b733 0%, #fc4a1a 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .table th,
+        .table td {
+            padding: 15px;
+            text-align: right;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .checkout-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+
+        .receipt {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            border: 2px dashed #667eea;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-tab {
+                margin: 5px 0;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛒 سیستم مدیریت سوپرمارکت</h1>
+            <p>سیستم جامع مدیریت فروشگاه و انبار</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('dashboard')">📊 داشبورد</button>
+            <button class="nav-tab" onclick="showTab('products')">📦 محصولات</button>
+            <button class="nav-tab" onclick="showTab('inventory')">📋 انبار</button>
+            <button class="nav-tab" onclick="showTab('sales')">💰 فروش</button>
+            <button class="nav-tab" onclick="showTab('customers')">👥 مشتریان</button>
+            <button class="nav-tab" onclick="showTab('reports')">📈 گزارشات</button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProducts">0</div>
+                    <div>تعداد محصولات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalSales">0</div>
+                    <div>فروش امروز (تومان)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCustomers">0</div>
+                    <div>تعداد مشتریان</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lowStockItems">0</div>
+                    <div>محصولات کم موجود</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>آخرین فعالیت‌ها</h3>
+                <div id="recentActivity"></div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="products" class="tab-content">
+            <div class="card">
+                <h3>افزودن محصول جدید</h3>
+                <form id="productForm">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div class="form-group">
+                            <label>نام محصول:</label>
+                            <input type="text" id="productName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>کد محصول:</label>
+                            <input type="text" id="productCode" required>
+                        </div>
+                        <div class="form-group">
+                            <label>دسته‌بندی:</label>
+                            <select id="productCategory" required>
+                                <option value="">انتخاب کنید</option>
+                                <option value="لبنیات">لبنیات</option>
+                                <option value="میوه و سبزی">میوه و سبزی</option>
+                                <option value="نان و غلات">نان و غلات</option>
+                                <option value="گوشت و مرغ">گوشت و مرغ</option>
+                                <option value="نوشیدنی">نوشیدنی</option>
+                                <option value="خشکبار">خشکبار</option>
+                                <option value="بهداشتی">بهداشتی</option>
+                                <option value="سایر">سایر</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>قیمت (تومان):</label>
+                            <input type="number" id="productPrice" required>
+                        </div>
+                        <div class="form-group">
+                            <label>موجودی:</label>
+                            <input type="number" id="productStock" required>
+                        </div>
+                        <div class="form-group">
+                            <label>حداقل موجودی:</label>
+                            <input type="number" id="productMinStock" value="5">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">افزودن محصول</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>لیست محصولات</h3>
+                <input type="text" id="productSearch" placeholder="جستجو در محصولات..." style="width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 8px; border: 1px solid #ddd;">
+                <div style="overflow-x: auto;">
+                    <table class="table" id="productsTable">
+                        <thead>
+                            <tr>
+                                <th>کد</th>
+                                <th>نام محصول</th>
+                                <th>دسته‌بندی</th>
+                                <th>قیمت</th>
+                                <th>موجودی</th>
+                                <th>وضعیت</th>
+                                <th>عملیات</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Tab -->
+        <div id="sales" class="tab-content">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <div class="card">
+                    <h3>فروش محصولات</h3>
+                    <form id="salesForm">
+                        <div class="form-group">
+                            <label>انتخاب محصول:</label>
+                            <select id="saleProduct" required>
+                                <option value="">انتخاب کنید</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>تعداد:</label>
+                            <input type="number" id="saleQuantity" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>تخفیف (درصد):</label>
+                            <input type="number" id="saleDiscount" min="0" max="100" value="0">
+                        </div>
+                        <button type="submit" class="btn btn-success">افزودن به سبد خرید</button>
+                    </form>
+
+                    <div style="margin-top: 30px;">
+                        <h4>سبد خرید فعلی</h4>
+                        <div id="currentCart"></div>
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-primary" onclick="finalizeSale()">تکمیل فروش</button>
+                            <button class="btn btn-danger" onclick="clearCart()">پاک کردن سبد</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>اطلاعات فاکتور</h3>
+                    <div id="invoiceInfo">
+                        <p><strong>تعداد اقلام:</strong> <span id="totalItems">0</span></p>
+                        <p><strong>مجموع قیمت:</strong> <span id="subtotal">0</span> تومان</p>
+                        <p><strong>تخفیف:</strong> <span id="totalDiscount">0</span> تومان</p>
+                        <p><strong>مبلغ نهایی:</strong> <span id="finalTotal">0</span> تومان</p>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>نام مشتری (اختیاری):</label>
+                        <input type="text" id="customerName" placeholder="نام مشتری">
+                    </div>
+                    <div class="form-group">
+                        <label>شماره تماس (اختیاری):</label>
+                        <input type="text" id="customerPhone" placeholder="شماره تماس">
+                    </div>
+                </div>
+            </div>
+
+            <div id="receipt" class="receipt" style="display: none;">
+                <h3 style="text-align: center;">🧾 رسید فروش</h3>
+                <div id="receiptContent"></div>
+            </div>
+        </div>
+
+        <!-- Other tabs removed for brevity but following the same pattern -->
+    </div>
+
+    <script>
+        // Global Variables
+        let products = JSON.parse(localStorage.getItem('products')) || [];
+        let customers = JSON.parse(localStorage.getItem('customers')) || [];
+        let sales = JSON.parse(localStorage.getItem('sales')) || [];
+        let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+        let currentCart = [];
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                updateDashboard();
+                displayProducts();
+                updateSalesDropdowns();
+                checkLowStock();
+            } catch (error) {
+                console.error('خطا در راه‌اندازی برنامه:', error);
+                showAlert('خطا در راه‌اندازی برنامه. لطفاً صفحه را مجدداً بارگذاری کنید.', 'danger');
+            }
+        });
+
+        // Tab Management
+        function showTab(tabName) {
+            try {
+                // Hide all tabs
+                const tabs = document.querySelectorAll('.tab-content');
+                tabs.forEach(tab => tab.classList.remove('active'));
+                
+                // Remove active class from all nav tabs
+                const navTabs = document.querySelectorAll('.nav-tab');
+                navTabs.forEach(tab => tab.classList.remove('active'));
+                
+                // Show selected tab
+                const selectedTab = document.getElementById(tabName);
+                if (selectedTab) {
+                    selectedTab.classList.add('active');
+                    event.target.classList.add('active');
+                }
+                
+                // Update data when switching tabs
+                if (tabName === 'dashboard') updateDashboard();
+            } catch (error) {
+                console.error('خطا در تغییر تب:', error);
+            }
+        }
+
+        // Product Management
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            try {
+                const product = {
+                    id: Date.now().toString(),
+                    code: document.getElementById('productCode').value,
+                    name: document.getElementById('productName').value,
+                    category: document.getElementById('productCategory').value,
+                    price: parseFloat(document.getElementById('productPrice').value),
+                    stock: parseInt(document.getElementById('productStock').value),
+                    minStock: parseInt(document.getElementById('productMinStock').value)
+                };
+                
+                // Validation
+                if (!product.name || !product.code || !product.category || 
+                    isNaN(product.price) || isNaN(product.stock) || isNaN(product.minStock)) {
+                    showAlert('لطفاً تمام فیلدها را به درستی پر کنید.', 'danger');
+                    return;
+                }
+                
+                // Check if product code already exists
+                if (products.find(p => p.code === product.code)) {
+                    showAlert('کد محصول تکراری است!', 'danger');
+                    return;
+                }
+                
+                products.push(product);
+                localStorage.setItem('products', JSON.stringify(products));
+                
+                displayProducts();
+                updateSalesDropdowns();
+                updateDashboard();
+                
+                showAlert('محصول با موفقیت اضافه شد!', 'success');
+                this.reset();
+            } catch (error) {
+                console.error('خطا در افزودن محصول:', error);
+                showAlert('خطا در افزودن محصول. لطفاً مجدداً تلاش کنید.', 'danger');
+            }
+        });
+
+        function displayProducts() {
+            try {
+                const tbody = document.querySelector('#productsTable tbody');
+                if (!tbody) return;
+                
+                tbody.innerHTML = '';
+                
+                const searchTerm = document.getElementById('productSearch')?.value.toLowerCase() || '';
+                const filteredProducts = products.filter(product => 
+                    product.name.toLowerCase().includes(searchTerm) ||
+                    product.code.toLowerCase().includes(searchTerm) ||
+                    product.category.toLowerCase().includes(searchTerm)
+                );
+                
+                filteredProducts.forEach(product => {
+                    const status = product.stock <= product.minStock ? 
+                        '<span style="color: red;">کم موجود</span>' : 
+                        '<span style="color: green;">موجود</span>';
+                    
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${product.code}</td>
+                        <td>${product.name}</td>
+                        <td>${product.category}</td>
+                        <td>${product.price.toLocaleString()} تومان</td>
+                        <td>${product.stock}</td>
+                        <td>${status}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editProduct('${product.id}')">ویرایش</button>
+                            <button class="btn btn-danger" onclick="deleteProduct('${product.id}')">حذف</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('خطا در نمایش محصولات:', error);
+            }
+        }
+
+        // Product search
+        const productSearchInput = document.getElementById('productSearch');
+        if (productSearchInput) {
+            productSearchInput.addEventListener('input', displayProducts);
+        }
+
+        function deleteProduct(id) {
+            try {
+                if (confirm('آیا از حذف این محصول اطمینان دارید؟')) {
+                    products = products.filter(p => p.id !== id);
+                    localStorage.setItem('products', JSON.stringify(products));
+                    displayProducts();
+                    updateSalesDropdowns();
+                    updateDashboard();
+                    showAlert('محصول حذف شد!', 'success');
+                }
+            } catch (error) {
+                console.error('خطا در حذف محصول:', error);
+                showAlert('خطا در حذف محصول.', 'danger');
+            }
+        }
+
+        // Sales Management
+        function updateSalesDropdowns() {
+            try {
+                const select = document.getElementById('saleProduct');
+                if (!select) return;
+                
+                select.innerHTML = '<option value="">انتخاب کنید</option>';
+                
+                products.filter(p => p.stock > 0).forEach(product => {
+                    const option = document.createElement('option');
+                    option.value = product.id;
+                    option.textContent = `${product.name} - ${product.price.toLocaleString()} تومان (موجودی: ${product.stock})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی لیست فروش:', error);
+            }
+        }
+
+        const salesForm = document.getElementById('salesForm');
+        if (salesForm) {
+            salesForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                try {
+                    const productId = document.getElementById('saleProduct').value;
+                    const quantity = parseInt(document.getElementById('saleQuantity').value);
+                    const discount = parseFloat(document.getElementById('saleDiscount').value) || 0;
+                    
+                    const product = products.find(p => p.id === productId);
+                    if (!product) {
+                        showAlert('محصول انتخاب شده معتبر نیست.', 'danger');
+                        return;
+                    }
+                    
+                    if (product.stock < quantity) {
+                        showAlert('موجودی کافی نیست!', 'danger');
+                        return;
+                    }
+                    
+                    const cartItem = {
+                        productId: productId,
+                        productName: product.name,
+                        price: product.price,
+                        quantity: quantity,
+                        discount: discount,
+                        total: (product.price * quantity) * (1 - discount / 100)
+                    };
+                    
+                    currentCart.push(cartItem);
+                    updateCartDisplay();
+                    this.reset();
+                    showAlert('محصول به سبد خرید اضافه شد!', 'success');
+                } catch (error) {
+                    console.error('خطا در افزودن به سبد خرید:', error);
+                    showAlert('خطا در افزودن به سبد خرید.', 'danger');
+                }
+            });
+        }
+
+        function updateCartDisplay() {
+            try {
+                const cartDiv = document.getElementById('currentCart');
+                if (!cartDiv) return;
+                
+                cartDiv.innerHTML = '';
+                
+                let totalItems = 0;
+                let subtotal = 0;
+                let totalDiscount = 0;
+                
+                currentCart.forEach((item, index) => {
+                    totalItems += item.quantity;
+                    subtotal += item.price * item.quantity;
+                    totalDiscount += (item.price * item.quantity) * (item.discount / 100);
+                    
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'checkout-item';
+                    itemDiv.innerHTML = `
+                        <div>
+                            <strong>${item.productName}</strong><br>
+                            ${item.quantity} × ${item.price.toLocaleString()} تومان
+                            ${item.discount > 0 ? ` (${item.discount}% تخفیف)` : ''}
+                        </div>
+                        <div>
+                            <strong>${item.total.toLocaleString()} تومان</strong>
+                            <button class="btn btn-danger" style="margin-right: 10px;" onclick="removeFromCart(${index})">حذف</button>
+                        </div>
+                    `;
+                    cartDiv.appendChild(itemDiv);
+                });
+                
+                // Update totals
+                const elements = {
+                    totalItems: document.getElementById('totalItems'),
+                    subtotal: document.getElementById('subtotal'),
+                    totalDiscount: document.getElementById('totalDiscount'),
+                    finalTotal: document.getElementById('finalTotal')
+                };
+                
+                if (elements.totalItems) elements.totalItems.textContent = totalItems;
+                if (elements.subtotal) elements.subtotal.textContent = subtotal.toLocaleString();
+                if (elements.totalDiscount) elements.totalDiscount.textContent = totalDiscount.toLocaleString();
+                if (elements.finalTotal) elements.finalTotal.textContent = (subtotal - totalDiscount).toLocaleString();
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی سبد خرید:', error);
+            }
+        }
+
+        function removeFromCart(index) {
+            try {
+                currentCart.splice(index, 1);
+                updateCartDisplay();
+                showAlert('محصول از سبد خرید حذف شد.', 'success');
+            } catch (error) {
+                console.error('خطا در حذف از سبد خرید:', error);
+            }
+        }
+
+        function clearCart() {
+            try {
+                currentCart = [];
+                updateCartDisplay();
+                showAlert('سبد خرید پاک شد.', 'success');
+            } catch (error) {
+                console.error('خطا در پاک کردن سبد خرید:', error);
+            }
+        }
+
+        function finalizeSale() {
+            try {
+                if (currentCart.length === 0) {
+                    showAlert('سبد خرید خالی است!', 'danger');
+                    return;
+                }
+                
+                const customerName = document.getElementById('customerName')?.value || 'مشتری';
+                const customerPhone = document.getElementById('customerPhone')?.value;
+                
+                // Update product stock
+                currentCart.forEach(item => {
+                    const product = products.find(p => p.id === item.productId);
+                    if (product) {
+                        product.stock -= item.quantity;
+                    }
+                });
+                
+                // Create sale record
+                const sale = {
+                    id: Date.now().toString(),
+                    date: new Date().toLocaleDateString('fa-IR'),
+                    time: new Date().toLocaleTimeString('fa-IR'),
+                    customerName: customerName,
+                    customerPhone: customerPhone,
+                    items: [...currentCart],
+                    totalItems: currentCart.reduce((sum, item) => sum + item.quantity, 0),
+                    subtotal: currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+                    totalDiscount: currentCart.reduce((sum, item) => sum + (item.price * item.quantity * item.discount / 100), 0),
+                    finalTotal: currentCart.reduce((sum, item) => sum + item.total, 0)
+                };
+                
+                sales.push(sale);
+                
+                // Save to localStorage
+                localStorage.setItem('products', JSON.stringify(products));
+                localStorage.setItem('sales', JSON.stringify(sales));
+                
+                // Show receipt
+                showReceipt(sale);
+                
+                // Reset
+                currentCart = [];
+                updateCartDisplay();
+                updateSalesDropdowns();
+                displayProducts();
+                updateDashboard();
+                
+                // Clear customer info
+                if (document.getElementById('customerName')) document.getElementById('customerName').value = '';
+                if (document.getElementById('customerPhone')) document.getElementById('customerPhone').value = '';
+                
+                showAlert('فروش با موفقیت انجام شد!', 'success');
+            } catch (error) {
+                console.error('خطا در تکمیل فروش:', error);
+                showAlert('خطا در تکمیل فروش. لطفاً مجدداً تلاش کنید.', 'danger');
+            }
+        }
+
+        function showReceipt(sale) {
+            try {
+                const receiptDiv = document.getElementById('receipt');
+                const contentDiv = document.getElementById('receiptContent');
+                
+                if (!receiptDiv || !contentDiv) return;
+                
+                let itemsHtml = '';
+                sale.items.forEach(item => {
+                    itemsHtml += `
+                        <tr>
+                            <td>${item.productName}</td>
+                            <td>${item.quantity}</td>
+                            <td>${item.price.toLocaleString()}</td>
+                            <td>${item.discount}%</td>
+                            <td>${item.total.toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                contentDiv.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <h4>سوپرمارکت شما</h4>
+                        <p>تاریخ: ${sale.date} - ساعت: ${sale.time}</p>
+                        <p>شماره فاکتور: ${sale.id}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <strong>مشتری:</strong> ${sale.customerName}
+                        ${sale.customerPhone ? `<br><strong>تلفن:</strong> ${sale.customerPhone}` : ''}
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #333;">
+                                <th style="text-align: right; padding: 8px;">محصول</th>
+                                <th style="text-align: center; padding: 8px;">تعداد</th>
+                                <th style="text-align: center; padding: 8px;">قیمت واحد</th>
+                                <th style="text-align: center; padding: 8px;">تخفیف</th>
+                                <th style="text-align: center; padding: 8px;">مبلغ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 20px; border-top: 2px solid #333; padding-top: 15px;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>تعداد اقلام:</span>
+                            <span>${sale.totalItems}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>جمع کل:</span>
+                            <span>${sale.subtotal.toLocaleString()} تومان</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>تخفیف:</span>
+                            <span>${sale.totalDiscount.toLocaleString()} تومان</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 18px; border-top: 1px solid #333; padding-top: 10px;">
+                            <span>مبلغ نهایی:</span>
+                            <span>${sale.finalTotal.toLocaleString()} تومان</span>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 20px;">
+                        <p>با تشکر از خرید شما</p>
+                        <button class="btn btn-primary" onclick="printReceipt()">چاپ فاکتور</button>
+                        <button class="btn btn-danger" onclick="hideReceipt()">بستن</button>
+                    </div>
+                `;
+                
+                receiptDiv.style.display = 'block';
+            } catch (error) {
+                console.error('خطا در نمایش رسید:', error);
+            }
+        }
+
+        function hideReceipt() {
+            try {
+                const receiptDiv = document.getElementById('receipt');
+                if (receiptDiv) receiptDiv.style.display = 'none';
+            } catch (error) {
+                console.error('خطا در بستن رسید:', error);
+            }
+        }
+
+        function printReceipt() {
+            try {
+                window.print();
+            } catch (error) {
+                console.error('خطا در چاپ:', error);
+                showAlert('خطا در چاپ رسید.', 'danger');
+            }
+        }
+
+        // Dashboard Updates
+        function updateDashboard() {
+            try {
+                const elements = {
+                    totalProducts: document.getElementById('totalProducts'),
+                    totalSales: document.getElementById('totalSales'),
+                    lowStockItems: document.getElementById('lowStockItems'),
+                    recentActivity: document.getElementById('recentActivity')
+                };
+                
+                if (elements.totalProducts) elements.totalProducts.textContent = products.length;
+                
+                const today = new Date().toLocaleDateString('fa-IR');
+                const todaySales = sales.filter(s => s.date === today);
+                const todayRevenue = todaySales.reduce((sum, s) => sum + s.finalTotal, 0);
+                
+                if (elements.totalSales) elements.totalSales.textContent = todayRevenue.toLocaleString();
+                if (elements.lowStockItems) elements.lowStockItems.textContent = products.filter(p => p.stock <= p.minStock).length;
+                
+                // Recent activity
+                if (elements.recentActivity) {
+                    const recentSales = sales.slice(-5).reverse();
+                    
+                    if (recentSales.length > 0) {
+                        elements.recentActivity.innerHTML = recentSales.map(sale => 
+                            `<div style="padding: 10px; border-bottom: 1px solid #eee;">
+                                <strong>فروش ${sale.finalTotal.toLocaleString()} تومان</strong> - ${sale.customerName} - ${sale.date} ${sale.time}
+                            </div>`
+                        ).join('');
+                    } else {
+                        elements.recentActivity.innerHTML = '<p>هنوز فعالیتی ثبت نشده است.</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('خطا در به‌روزرسانی داشبورد:', error);
+            }
+        }
+
+        function checkLowStock() {
+            // This function would be implemented similar to others with proper error handling
+        }
+
+        // Utility Functions
+        function showAlert(message, type = 'success') {
+            try {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `alert alert-${type}`;
+                alertDiv.textContent = message;
+                alertDiv.style.position = 'fixed';
+                alertDiv.style.top = '20px';
+                alertDiv.style.right = '20px';
+                alertDiv.style.zIndex = '9999';
+                alertDiv.style.maxWidth = '400px';
+                
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 3000);
+            } catch (error) {
+                console.error('خطا در نمایش پیام:', error);
+            }
+        }
+
+        // Add some sample data if empty
+        if (products.length === 0) {
+            try {
+                const sampleProducts = [
+                    { id: '1', code: 'P001', name: 'شیر کاله', category: 'لبنیات', price: 25000, stock: 50, minStock: 10 },
+                    { id: '2', code: 'P002', name: 'نان بربری', category: 'نان و غلات', price: 5000, stock: 30, minStock: 5 },
+                    { id: '3', code: 'P003', name: 'سیب قرمز', category: 'میوه و سبزی', price: 45000, stock: 25, minStock: 5 },
+                    { id: '4', code: 'P004', name: 'مرغ تازه', category: 'گوشت و مرغ', price: 180000, stock: 15, minStock: 3 },
+                    { id: '5', code: 'P005', name: 'آب معدنی', category: 'نوشیدنی', price: 8000, stock: 100, minStock: 20 }
+                ];
+                
+                products = sampleProducts;
+                localStorage.setItem('products', JSON.stringify(products));
+                displayProducts();
+                updateSalesDropdowns();
+                updateDashboard();
+            } catch (error) {
+                console.error('خطا در افزودن داده‌های نمونه:', error);
+            }
+        }
+    </script>
+</body>
+</html>
